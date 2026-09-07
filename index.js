@@ -76,7 +76,7 @@ const client = new Client({
 });
 
 // ─── حدث: جهوزية البوت ────────────────────────────────
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`[BOT] ✅ تسجّل البوت بنجاح كـ: ${client.user.tag}`);
   console.log(`[BOT] 📡 يخدم ${client.guilds.cache.size} سيرفر(ات).`);
 
@@ -85,6 +85,40 @@ client.once('ready', () => {
     status: 'online',
     activities: [{ name: '🎫 DARK TICKET | نظام التذاكر', type: 3 }],
   });
+
+  // ─── تم التعديل هنا: كود تسجيل الأوامر المائلة في ديسكورد ───
+  const commandsData = [
+    {
+      name: 'setup',
+      description: 'إرسال بانل نظام التذاكر في الروم الحالية',
+    }
+  ];
+
+  try {
+    await client.application.commands.set(commandsData);
+    console.log('[BOT] 🚀 تم تسجيل الأوامر المائلة (/) بنجاح في ديسكورد!');
+  } catch (error) {
+    console.error('[BOT] ❌ خطأ أثناء تسجيل الأوامر المائلة:', error);
+  }
+});
+
+// ─── حدث: التفاعل (الأزرار والأوامر المائلة) ────────────────────────────
+client.on('interactionCreate', async (interaction) => {
+  
+  // 1. معالجة الأوامر المائلة (Slash Commands)
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'setup') {
+      // قم بكتابة كود إرسال البانل هنا
+      await interaction.reply({ content: '⏳ جاري إعداد وإرسال بانل التذاكر...', ephemeral: true });
+    }
+    return; // إنهاء التنفيذ هنا للأوامر
+  }
+
+  // 2. معالجة ضغطات الأزرار (Buttons)
+  if (interaction.isButton()) {
+    const { customId, guild, member, channel } = interaction;
+    // أكمل كود الأزرار الخاص بك هنا لفتح وإغلاق التذاكر...
+  }
 });
 
 // ─── حدث: التفاعل بالأزرار ────────────────────────────
