@@ -80,5 +80,5 @@ GuildConfigSchema.methods.incrementTicketCount = async function () {
   return this.totalTickets;
 };
 
-// تصدير الموديل للاستخدام في باقي الملفات
-module.exports = mongoose.model('GuildConfig', GuildConfigSchema);
+// تم التعديل هنا: تصدير الموديل باسم BuildConfig ليطابق الاستدعاء في الملفات الأخرى
+module.exports = mongoose.model('BuildConfig', GuildConfigSchema);
