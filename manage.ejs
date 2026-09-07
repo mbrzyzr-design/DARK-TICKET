@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DARK TICKET — إدارة <%= guild.name %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary:   #0b0b12;
+      --bg-panel:     rgba(20, 20, 35, 0.78);
+      --bg-input:     rgba(11, 11, 20, 0.85);
+      --purple-glow:  #8a2be2;
+      --purple-light: #a855f7;
+      --purple-dim:   rgba(138, 43, 226, 0.15);
+      --border-glass: rgba(138, 43, 226, 0.25);
+      --border-input: rgba(138, 43, 226, 0.30);
+      --text-primary: #f0e6ff;
+      --text-muted:   #8b85a0;
+      --green-ok:     #4ade80;
+      --red-err:      #f87171;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* ===== خلفية متوهجة ===== */
+    .stars-bg {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 10% 20%, rgba(138,43,226,0.10) 0%, transparent 55%),
+        radial-gradient(ellipse at 90% 80%, rgba(88,28,135,0.09) 0%, transparent 55%),
+        var(--bg-primary);
+      z-index: 0;
+    }
+
+    /* ===== النافبار ===== */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: rgba(11,11,18,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .navbar-left { display: flex; align-items: center; gap: 1rem; }
+
+    .navbar-logo {
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #c084fc, #a855f7, #8a2be2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+
+    .navbar-separator { color: var(--border-glass); font-size: 1.2rem; }
+
+    .guild-name-nav {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #c4b5fd;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .guild-icon-sm {
+      width: 26px; height: 26px;
+      border-radius: 0.4rem;
+      object-fit: cover;
+      border: 1px solid var(--border-glass);
+    }
+
+    .user-info-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: rgba(138,43,226,0.10);
+      border: 1px solid var(--border-glass);
+      border-radius: 100px;
+      padding: 0.3rem 0.9rem 0.3rem 0.35rem;
+    }
+
+    .user-avatar-sm {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--purple-glow);
+      object-fit: cover;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.35rem 0.8rem;
+      border: 1px solid rgba(138,43,226,0.2);
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+      font-family: 'Cairo', sans-serif;
+    }
+    .btn-back:hover {
+      color: #c084fc;
+      border-color: var(--purple-glow);
+      background: rgba(138,43,226,0.10);
+    }
+
+    /* ===== بطاقات الزجاج ===== */
+    .glass-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-glass);
+      border-radius: 1.25rem;
+      box-shadow:
+        0 0 35px rgba(138,43,226,0.07),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* ===== حقول الإدخال ===== */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #c4b5fd;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: -0.25rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: 0.7rem;
+      padding: 0.75rem 1rem;
+      color: var(--text-primary);
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--purple-glow);
+      box-shadow: 0 0 0 3px rgba(138,43,226,0.18);
+    }
+
+    .form-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a2be2' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 0.85rem center;
+      padding-left: 2.5rem;
+      cursor: pointer;
+    }
+
+    .form-select option {
+      background-color: #14141f;
+      color: var(--text-primary);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.7;
+    }
+
+    /* ===== مدخل اللون ===== */
+    .color-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .color-picker {
+      width: 48px;
+      height: 48px;
+      border-radius: 0.6rem;
+      border: 2px solid var(--border-input);
+      background: transparent;
+      cursor: pointer;
+      padding: 2px;
+      transition: border-color 0.25s;
+    }
+    .color-picker:focus { border-color: var(--purple-glow); outline: none; }
+
+    .color-hex-input {
+      flex: 1;
+    }
+
+    /* ===== معاينة الـ Embed ===== */
+    .embed-preview {
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: #2f3136;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .embed-preview-bar {
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+      flex-shrink: 0;
+    }
+
+    .embed-preview-content {
+      padding: 1rem;
+      flex: 1;
+    }
+
+    .embed-preview-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.4rem;
+    }
+
+    .embed-preview-desc {
+      font-size: 0.87rem;
+      color: #dcddde;
+      line-height: 1.7;
+    }
+
+    .embed-preview-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 1rem;
+      padding: 0.45rem 1rem;
+      background: #5865f2;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 0.4rem;
+    }
+
+    /* ===== زر الحفظ والإرسال ===== */
+    .btn-save {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #6d28d9, #8a2be2, #7c3aed);
+      color: #fff;
+      font-family: 'Cairo', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow:
+        0 0 25px rgba(138,43,226,0.45),
+        0 0 60px rgba(138,43,226,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+      margin-top: 0.5rem;
+    }
+
+    .btn-save::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      transition: left 0.55s ease;
+    }
+
+    .btn-save:hover::before { left: 100%; }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 40px rgba(138,43,226,0.7),
+        0 0 80px rgba(138,43,226,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    .btn-save:active { transform: translateY(0); }
+
+    .btn-save:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== رسائل الإشعار ===== */
+    .alert {
+      padding: 0.9rem 1.25rem;
+      border-radius: 0.8rem;
+      font-size: 0.93rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .alert-success {
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green-ok);
+    }
+
+    .alert-error {
+      background: rgba(248,113,113,0.12);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: var(--red-err);
+    }
+
+    /* ===== قسم الإعداد ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .section-icon {
+      width: 40px; height: 40px;
+      border-radius: 0.7rem;
+      background: var(--purple-dim);
+      border: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #e2d9f3;
+    }
+
+    .section-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* ===== تنسيق النص المتوهج ===== */
+    .text-glow {
+      background: linear-gradient(135deg, #c084fc, #a855f7, #8a2be2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ===== شريط التقدم / إحصائيات ===== */
+    .stat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--purple-dim);
+      border: 1px solid var(--border-glass);
+      border-radius: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.83rem;
+      color: #c4b5fd;
+      font-weight: 600;
+    }
+
+    /* ===== تخطيط الشبكة ===== */
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ===== حركة التحميل ===== */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    /* الخط الفاصل */
+    .divider-glow {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--purple-glow), transparent);
+      opacity: 0.35;
+      margin: 0 auto 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- خلفية النجوم -->
+<div class="stars-bg"></div>
+
+<!-- ===== النافبار ===== -->
+<nav class="navbar">
+  <div class="navbar-left">
+    <a href="/" class="navbar-logo">🎫 DARK TICKET</a>
+    <span class="navbar-separator">›</span>
+    <a href="/dashboard" class="btn-back">← لوحة التحكم</a>
+    <span class="navbar-separator">›</span>
+    <div class="guild-name-nav">
+      <% if (guild.icon) { %>
+        <img
+          class="guild-icon-sm"
+          src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=64"
+          alt=""
+        />
+      <% } %>
+      <span><%= guild.name %></span>
+    </div>
+  </div>
+  <div class="user-info-nav">
+    <% if (user.avatar) { %>
+      <img
+        class="user-avatar-sm"
+        src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64"
+        alt=""
+      />
+    <% } else { %>
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#8a2be2);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;border:2px solid var(--purple-glow);">
+        <%= user.username.charAt(0).toUpperCase() %>
+      </div>
+    <% } %>
+    <span style="font-size:0.88rem;font-weight:600;color:#e2d9f3;"><%= user.username %></span>
+    <a href="/auth/logout" style="font-size:0.78rem;color:var(--text-muted);text-decoration:none;padding:0.2rem 0.55rem;border:1px solid rgba(138,43,226,0.2);border-radius:0.35rem;font-family:'Cairo',sans-serif;transition:all 0.2s;" onmouseover="this.style.color='#c084fc';this.style.borderColor='var(--purple-glow)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='rgba(138,43,226,0.2)'">خروج</a>
+  </div>
+</nav>
+
+<!-- ===== المحتوى الرئيسي ===== -->
+<main style="position:relative;z-index:1;padding:6rem 1.5rem 4rem;max-width:860px;margin:0 auto;">
+
+  <!-- ===== رأس الصفحة ===== -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;">
+    <div>
+      <h1 style="font-size:1.7rem;font-weight:900;margin-bottom:0.3rem;">
+        إعداد نظام التذاكر
+        <span class="text-glow">لـ <%= guild.name %></span>
+      </h1>
+      <p style="color:var(--text-muted);font-size:0.9rem;">
+        خصّص بانل التذاكر وأرسله لسيرفرك بضغطة زر واحدة.
+      </p>
+    </div>
+    <!-- إحصائيات سريعة -->
+    <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+      <div class="stat-chip">🎫 <span><%= config.totalTickets || 0 %></span> تذكرة كلياً</div>
+      <% if (config.ticketChannelId) { %>
+        <div class="stat-chip" style="color:#4ade80;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.08);">
+          ✅ البانل مُفعَّل
+        </div>
+      <% } else { %>
+        <div class="stat-chip" style="color:var(--text-muted);">
+          ⚪ لم يُفعَّل بعد
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- ===== رسائل الحالة ===== -->
+  <% if (success) { %>
+    <div class="alert alert-success">
+      ✅ تم حفظ الإعدادات وإرسال البانل التفاعلي إلى الروم المحدد بنجاح!
+    </div>
+  <% } %>
+  <% if (error) { %>
+    <div class="alert alert-error">
+      ❌ <%= error %>
+    </div>
+  <% } %>
+
+  <!-- ===== نموذج الإعداد ===== -->
+  <form id="settingsForm" method="POST" action="/manage/<%= guild.id %>" onsubmit="handleSubmit(event)">
+
+    <!-- ========================================
+         القسم الأول: إعدادات القنوات والأدوار
+    ========================================= -->
+    <div class="glass-card" style="padding:1.75rem;margin-bottom:1.5rem;">
+
+      <div class="section-header">
+        <div class="section-icon">📡</div>
+        <div>
+          <div class="section-title">إعدادات القنوات والأدوار</div>
+          <div class="section-subtitle">حدد أين تريد نظام التذاكر أن يعمل</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1.35rem;">
+
+        <!-- روم البانل -->
+        <div class="form-group">
+          <label class="form-label" for="ticketChannelId">
+            📢 روم إرسال بانل التذاكر
+          </label>
+          <p class="form-hint">سيُرسَل في هذا الروم الزر الذي يضغط عليه الأعضاء لفتح تذكرة.</p>
+          <select class="form-select" id="ticketChannelId" name="ticketChannelId" required>
+            <option value="">— اختر الروم —</option>
+            <% channels.filter(c => c.type === 0).forEach(function(channel) { %>
+              <option
+                value="<%= channel.id %>"
+                <%= config.ticketChannelId === channel.id ? 'selected' : '' %>
+              >
+                # <%= channel.name %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <!-- فئة التذاكر -->
+        <div class="form-group">
+          <label class="form-label" for="categoryId">
+            📁 فئة (Category) إنشاء التذاكر
+          </label>
+          <p class="form-hint">ستُنشأ رومات التذاكر الخاصة داخل هذه الفئة تلقائياً.</p>
+          <select class="form-select" id="categoryId" name="categoryId" required>
+            <option value="">— اختر الفئة —</option>
+            <% channels.filter(c => c.type === 4).forEach(function(cat) { %>
+              <option
+                value="<%= cat.id %>"
+                <%= config.categoryId === cat.id ? 'selected' : '' %>
+              >
+                📁 <%= cat.name %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <!-- رتبة الدعم -->
+        <div class="form-group">
+          <label class="form-label" for="supportRoleId">
+            🛡️ رتبة فريق الدعم الفني
+          </label>
+          <p class="form-hint">هذه الرتبة ستملك صلاحية رؤية والرد على جميع التذاكر المفتوحة.</p>
+          <select class="form-select" id="supportRoleId" name="supportRoleId" required>
+            <option value="">— اختر الرتبة —</option>
+            <% roles.forEach(function(role) { %>
+              <option
+                value="<%= role.id %>"
+                style="color: <%= role.hexColor && role.hexColor !== '#000000' ? role.hexColor : '#f0e6ff' %>;"
+                <%= config.supportRoleId === role.id ? 'selected' : '' %>
+              >
+                @<%= role.name %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================
+         القسم الثاني: تخصيص رسالة الـ Embed
+    ========================================= -->
+    <div class="glass-card" style="padding:1.75rem;margin-bottom:1.5rem;">
+
+      <div class="section-header">
+        <div class="section-icon">🎨</div>
+        <div>
+          <div class="section-title">تخصيص رسالة البانل (Embed)</div>
+          <div class="section-subtitle">صمّم الرسالة التي سيراها الأعضاء لفتح تذكرة</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.75rem;">
+
+        <!-- عمود النموذج -->
+        <div style="display:flex;flex-direction:column;gap:1.35rem;">
+
+          <!-- عنوان الـ Embed -->
+          <div class="form-group">
+            <label class="form-label" for="embedTitle">
+              📝 عنوان الرسالة
+            </label>
+            <input
+              class="form-input"
+              type="text"
+              id="embedTitle"
+              name="embedTitle"
+              maxlength="256"
+              placeholder="🎫 نظام التذاكر"
+              value="<%= config.embedTitle || '🎫 نظام التذاكر' %>"
+              oninput="updatePreview()"
+            />
+          </div>
+
+          <!-- وصف الـ Embed -->
+          <div class="form-group">
+            <label class="form-label" for="embedDescription">
+              📄 وصف الرسالة
+            </label>
+            <textarea
+              class="form-textarea"
+              id="embedDescription"
+              name="embedDescription"
+              maxlength="1024"
+              placeholder="اضغط الزر أدناه لفتح تذكرة دعم..."
+              oninput="updatePreview()"
+            ><%= config.embedDescription || 'مرحباً! إذا كنت تحتاج إلى مساعدة، اضغط على الزر أدناه لفتح تذكرة دعم فني وسيتواصل معك فريقنا في أقرب وقت.' %></textarea>
+          </div>
+
+          <!-- لون الـ Embed -->
+          <div class="form-group">
+            <label class="form-label" for="embedColorHex">
+              🎨 لون شريط الـ Embed
+            </label>
+            <div class="color-input-wrapper">
+              <input
+                type="color"
+                class="color-picker"
+                id="embedColorPicker"
+                value="<%= config.embedColor || '#8a2be2' %>"
+                oninput="syncColorFromPicker(this.value)"
+              />
+              <input
+                class="form-input color-hex-input"
+                type="text"
+                id="embedColorHex"
+                name="embedColor"
+                maxlength="7"
+                placeholder="#8a2be2"
+                value="<%= config.embedColor || '#8a2be2' %>"
+                oninput="syncColorFromHex(this.value)"
+              />
+            </div>
+          </div>
+
+        </div>
+
+        <!-- عمود المعاينة -->
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div class="form-label">👁️ معاينة مباشرة</div>
+          <div style="background:#36393f;border-radius:0.75rem;padding:1rem;flex:1;min-height:220px;">
+            <!-- محاكاة بيئة ديسكورد -->
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#8a2be2);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#fff;">D</div>
+              <div>
+                <div style="font-size:0.85rem;font-weight:700;color:#fff;">DARK TICKET</div>
+                <div style="font-size:0.72rem;color:#72767d;">اليوم الساعة 12:00 م</div>
+              </div>
+            </div>
+            <!-- الـ Embed -->
+            <div class="embed-preview" style="display:flex;">
+              <div class="embed-preview-bar" id="previewBar" style="background:#8a2be2;"></div>
+              <div class="embed-preview-content">
+                <div class="embed-preview-title" id="previewTitle">🎫 نظام التذاكر</div>
+                <div class="embed-preview-desc" id="previewDesc">مرحباً! إذا كنت تحتاج إلى مساعدة، اضغط على الزر أدناه لفتح تذكرة دعم فني وسيتواصل معك فريقنا في أقرب وقت.</div>
+                <div class="embed-preview-button">📩 فتح تذكرة</div>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.76rem;color:var(--text-muted);text-align:center;">
+            هكذا ستبدو الرسالة في ديسكورد
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================
+         زر الحفظ والإرسال
+    ========================================= -->
+    <div class="glass-card" style="padding:1.75rem;">
+
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border-glass);">
+        <div class="section-icon">🚀</div>
+        <div>
+          <div class="section-title">حفظ وإرسال البانل</div>
+          <div class="section-subtitle">سيتم حفظ الإعدادات وإرسال البانل التفاعلي إلى الروم المحدد فوراً</div>
+        </div>
+      </div>
+
+      <!-- تحذير مهم -->
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:0.75rem;padding:0.9rem 1.1rem;margin-bottom:1.25rem;display:flex;gap:0.6rem;align-items:flex-start;">
+        <span style="font-size:1rem;flex-shrink:0;margin-top:0.1rem;">⚠️</span>
+        <p style="font-size:0.85rem;color:#fcd34d;line-height:1.7;">
+          في حال وجود بانل سابق في الروم، سيتم إرسال بانل جديد. تأكد من اختيار الإعدادات الصحيحة قبل الضغط.
+        </p>
+      </div>
+
+      <button type="submit" class="btn-save" id="saveBtn">
+        <div class="spinner" id="spinner"></div>
+        <span id="saveBtnText">💾 حفظ وإرسال البانل التفاعلي</span>
+      </button>
+
+    </div>
+
+  </form>
+
+</main>
+
+<!-- ===== الفوتر ===== -->
+<footer style="position:relative;z-index:1;border-top:1px solid var(--border-glass);padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.85rem;margin-top:2rem;">
+  <span class="text-glow" style="font-weight:700;">🎫 DARK TICKET</span>
+  &nbsp;—&nbsp; جميع الحقوق محفوظة © <%= new Date().getFullYear() %>
+</footer>
+
+<!-- ===== JavaScript للتفاعلية ===== -->
+<script>
+  // ===== تزامن منتقي اللون مع حقل النص =====
+  function syncColorFromPicker(value) {
+    document.getElementById('embedColorHex').value = value;
+    updatePreview();
+  }
+
+  function syncColorFromHex(value) {
+    // التحقق من صحة قيمة الـ Hex
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      document.getElementById('embedColorPicker').value = value;
+      updatePreview();
+    }
+  }
+
+  // ===== تحديث المعاينة الحية =====
+  function updatePreview() {
+    const title = document.getElementById('embedTitle').value || '🎫 نظام التذاكر';
+    const desc  = document.getElementById('embedDescription').value || 'اضغط الزر أدناه لفتح تذكرة...';
+    const color = document.getElementById('embedColorHex').value || '#8a2be2';
+
+    document.getElementById('previewTitle').textContent = title;
+    document.getElementById('previewDesc').textContent  = desc;
+
+    if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      document.getElementById('previewBar').style.background = color;
+    }
+  }
+
+  // ===== معالجة الإرسال =====
+  function handleSubmit(e) {
+    const btn     = document.getElementById('saveBtn');
+    const spinner = document.getElementById('spinner');
+    const text    = document.getElementById('saveBtnText');
+
+    // إظهار حالة التحميل
+    btn.disabled           = true;
+    spinner.style.display  = 'block';
+    text.textContent       = 'جارٍ الحفظ والإرسال...';
+
+    // السماح بإرسال النموذج بشكل طبيعي (POST)
+    return true;
+  }
+
+  // ===== تشغيل المعاينة عند التحميل الأول =====
+  updatePreview();
+
+  // ===== إخفاء رسائل الإشعار بعد 5 ثوانٍ =====
+  setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+      alert.style.transition = 'opacity 0.5s ease';
+      alert.style.opacity    = '0';
+      setTimeout(function() { alert.style.display = 'none'; }, 500);
+    });
+  }, 5000);
+</script>
+
+</body>
+</html>
