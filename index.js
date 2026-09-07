@@ -609,7 +609,7 @@ app.get('/manage/:guildId', requireAuth, requireGuildAdmin, async (req, res) => 
   const { guildId } = req.params;
 
   try {
-    // التحقق من تواجد البوت في السيرفر
+    // التحقق من تواجد البوت في السيرفر الكاش
     const guild = client.guilds.cache.get(guildId);
     if (!guild) {
       return res.status(404).send(
@@ -624,39 +624,51 @@ app.get('/manage/:guildId', requireAuth, requireGuildAdmin, async (req, res) => 
       await config.save();
     }
 
-    // جلب قنوات السيرفر (نصية وفئات)
-    const channels = guild.channels.cache
-      .filter((ch) => ch.type === ChannelType.GuildText || ch.type === ChannelType.GuildCategory)
-      .map((ch) => ({
-        id:   ch.id,
-        name: ch.name,
-        type: ch.type, // 0 = نصي، 4 = فئة
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    // جلب القنوات بشكل آمن والتحقق من الأنواع عبر الأرقام (0 للنصي، 4 للفئة) لتفادي أي نقص استدعاء
+    const channels = [];
+    if (guild.channels && guild.channels.cache) {
+      guild.channels.cache.forEach((ch) => {
+        // يدعم المقارنة بالـ ChannelType أو الأرقام مباشرة لضمان عدم الانهيار
+        if (ch.type === 0 || ch.type === 4 || ch.type === 'GUILD_TEXT' || ch.type === 'GUILD_CATEGORY') {
+          channels.push({
+            id:   ch.id,
+            name: ch.name || 'قناة غير مسمية',
+            type: ch.type, 
+          });
+        }
+      });
+      channels.sort((a, b) => a.name.localeCompare(b.name));
+    }
 
-    // جلب أدوار السيرفر (بدون @everyone والبوتات)
-    const roles = guild.roles.cache
-      .filter((r) => !r.managed && r.id !== guild.id)
-      .map((r) => ({
-        id:       r.id,
-        name:     r.name,
-        hexColor: r.hexColor,
-      }))
-      .sort((a, b) => b.position - a.position);
+    // جلب أدوار السيرفر بشكل آمن (بدون @everyone والبوتات)
+    const roles = [];
+    if (guild.roles && guild.roles.cache) {
+      guild.roles.cache.forEach((r) => {
+        if (!r.managed && r.id !== guild.id) {
+          roles.push({
+            id:       r.id,
+            name:     r.name,
+            hexColor: r.hexColor || '#ffffff',
+          });
+        }
+      });
+      roles.sort((a, b) => b.position - a.position);
+    }
 
+    // عرض وتمرير البيانات بشكل آمن لملف manage.ejs
     res.render('manage', {
       user:     req.session.user,
-      guild:    { id: guild.id, name: guild.name, icon: guild.icon },
-      config:   config.toObject(),
-      channels,
-      roles,
+      guild:    { id: guild.id, name: guild.name, icon: guild.icon || null },
+      config:   config ? config.toObject() : {},
+      channels: channels,
+      roles:    roles,
       success:  req.query.success === '1',
       error:    req.query.error || null,
     });
 
   } catch (err) {
     console.error('[MANAGE] ❌ خطأ في تحميل صفحة الإدارة:', err);
-    res.status(500).send('حدث خطأ في تحميل صفحة الإدارة.');
+    res.status(500).send(`حدث خطأ داخلي أثناء تحميل صفحة الإدارة: ${err.message}`);
   }
 });
 
@@ -703,7 +715,12 @@ app.post('/manage/:guildId', requireAuth, requireGuildAdmin, async (req, res) =>
     );
 
     // ─── إرسال أو تحديث البانل في ديسكورد ───
-    await sendOrUpdateTicketPanel(config);
+    // تم إضافة فحص للتأكد من وجود الدالة قبل استدعائها لمنع تجميد الحفظ
+    if (typeof sendOrUpdateTicketPanel === 'function') {
+      await sendOrUpdateTicketPanel(config);
+    } else {
+      console.warn('[MANAGE POST] ⚠️ دالة sendOrUpdateTicketPanel غير معرفة في الكود السفلي.');
+    }
 
     // التوجيه مع رسالة النجاح
     res.redirect(`/manage/${guildId}?success=1`);
