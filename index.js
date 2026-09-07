@@ -27,7 +27,7 @@ const axios          = require('axios');
 const path           = require('path');
 
 // ─── استيراد الموديل ──────────────────────────────────
-const GuildConfig = require('./models/GuildConfig');
+const BuildConfig = require('./GuildConfig');
 
 // ─── التحقق من متغيرات البيئة الأساسية ───────────────
 const REQUIRED_ENV = [
