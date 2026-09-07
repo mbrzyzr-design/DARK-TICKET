@@ -389,18 +389,18 @@ async function sendOrUpdateTicketPanel(config) {
 
 const app = express();
 
-// ─── إعداد محرك القوالب EJS ───────────────────────────
+// ─── تم التعديل هنا: إعداد محرك القوالب EJS ليقرأ من المجلد الرئيسي مباشرة ───
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', __dirname); 
 
 // مهم جداً لـ Railway: يخبر Express أنه وراء Reverse Proxy
 // حتى تعمل الـ Cookies بشكل صحيح مع HTTPS
 app.set('trust proxy', 1);
 
-// ─── الـ Middleware الأساسية ─────────────────────────────
+// ─── تم التعديل هنا: قراءة الملفات الساكنة (CSS/الصور) من المجلد الرئيسي مباشرة ───
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname)); 
 
 // ─── إعداد الجلسات (Sessions) ─────────────────────────
 app.use(
@@ -535,7 +535,6 @@ app.get('/', (req, res) => {
     user: req.session.user || null,
   });
 });
-
 // ===================================================
 // ░░ مسارات الداشبورد (تتطلب تسجيل دخول) ░░
 // ===================================================
